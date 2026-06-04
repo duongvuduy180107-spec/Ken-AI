@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>AIは日本語を勉強するのを助けてくれます</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <div id="settingsOverlay" class="overlay" aria-hidden="true">
+    <div class="overlay-shell">
+      <div class="overlay-head">
+        <div>
+          <h2>Cài đặt phòng chat</h2>
+          <div class="sub">Tất cả tuỳ chọn được lưu riêng cho từng phòng.</div>
+        </div>
+        <button id="settingsCloseBtn" class="settings-toggle-btn" type="button">✕ Đóng</button>
+      </div>
+
+      <div class="overlay-body">
+        <div class="settings-grid">
+          <div class="settings-column">
+            <div class="settings-card">
+              <div class="settings-title">
+                <h3>Chế độ hoạt động</h3>
+                <span class="hint">Chỉ phòng hiện tại</span>
+              </div>
+              <div class="mode-switch">
+                <button id="pureModeBtn" class="mode-btn active" type="button">Giáo sư AI</button>
+                <button id="roleplayModeBtn" class="mode-btn" type="button">Nhập vai</button>
+              </div>
+              <div class="settings-tip">
+                Phòng chat này giữ mode riêng. Chuyển phòng là mode, tên và avatar theo đúng phòng đó.
+              </div>
+            </div>
+
+            <div id="pureSettings" class="settings-card">
+              <div class="settings-title">
+                <h3>Giáo sư AI</h3>
+                <span class="hint">Không cần prompt nhập vai</span>
+              </div>
+              <div class="field">
+                <label>Tên AI</label>
+                <input id="aiNameInput" type="text" placeholder="Ví dụ: AI" />
+              </div>
+              <div class="settings-tip">
+                Tên này sẽ được AI dùng để tự xưng trong chế độ thuần.
+              </div>
+            </div>
+
+            <div id="roleplaySettings" class="settings-card hidden">
+              <div class="settings-title">
+                <h3>Nhập vai</h3>
+                <span class="hint">Tên · tính cách · avatar</span>
+              </div>
+
+              <div class="field">
+                <label>Tên nhân vật</label>
+                <input id="roleplayNameInput" type="text" placeholder="Ví dụ: Miku" />
+              </div>
+
+              <div class="field">
+                <label>Tính cách</label>
+                <textarea id="roleplayPersonalityInput" placeholder="Ví dụ: tsundere, dễ thương, hơi cộc nhưng quan tâm người dùng"></textarea>
+              </div>
+
+              <div class="field">
+                <label>Tên người dùng</label>
+                <input id="roleplayUserNameInput" type="text" placeholder="Để trống nếu không muốn gọi tên" />
+              </div>
+
+              <div class="field">
+                <label>Cách xưng hô</label>
+                <select id="roleplayRelationInput">
+                  <option value="cậu-tớ">cậu - tớ</option>
+                  <option value="mình-bạn">mình - bạn</option>
+                  <option value="ta-ngươi">ta - ngươi</option>
+                  <option value="anh-em">anh - em</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Avatar</label>
+                <div class="avatar-picker">
+                  <div class="avatar preview" id="roleplayAvatarPreview">
+                    <img id="roleplayAvatarImg" alt="roleplay avatar" />
+                    <span id="roleplayAvatarText">AI</span>
+                  </div>
+                  <input id="roleplayAvatarInput" type="file" accept="image/*" />
+                  <button id="clearAvatarBtn" class="mini-btn" type="button">Xóa avatar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-column">
+            <div class="settings-card">
+              <div class="settings-title">
+                <h3>Tuỳ chọn chat</h3>
+                <span class="hint">Gọn trong setting</span>
+              </div>
+
+              <div class="field">
+                <label>Model</label>
+                <select id="model" class="pill" title="Chọn model">
+                  <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                  <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+                  <option value="qwen-2.5-32b">Qwen 2.5 32B</option>
+                  <option value="gemma2-9b-it">Gemma 2 9B IT</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <div class="settings-title">
+                  <h3>Force JP</h3>
+                  <span class="hint">Ép trả lời Nhật</span>
+                </div>
+                <div class="toggle-group" style="justify-content:space-between">
+                  <span>Áp dụng cho phòng hiện tại</span>
+                  <input id="forceJP" type="checkbox" />
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="settings-title">
+                  <h3>Auto dịch</h3>
+                  <span class="hint">Dùng script nội bộ</span>
+                </div>
+                <div class="toggle-group" style="justify-content:space-between">
+                  <span>Tự dịch sang tiếng Việt</span>
+                  <input id="autoTranslate" type="checkbox" checked />
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-title">
+                <h3>Ghi chú</h3>
+                <span class="hint">Lưu theo phòng</span>
+              </div>
+              <div class="settings-tip">
+                Khi bạn đổi phòng, mọi thiết lập ở đây sẽ đi theo phòng đó. Không còn chuyện đổi qua thuần mà mất avatar hoặc tên của phòng nhập vai.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    
+  
+  <div id="notebookOverlay" class="overlay" aria-hidden="true">
+    <div class="overlay-shell notebook-shell">
+      <div class="overlay-head">
+        <div>
+          <h2>Sổ tay</h2>
+          <div class="sub">AI có thể tạo nhiều trang riêng, lưu theo từng phòng chat.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          <button id="notebookSettingsToggleBtn" class="settings-toggle-btn" type="button">⚙ Tuỳ chọn</button>
+          <button id="closeNotebookBtn" class="settings-toggle-btn" type="button">✕ Đóng</button>
+        </div>
+      </div>
+
+      <div class="overlay-body notebook-body">
+        <div id="notebookSettingsPanel" class="notebook-settings-panel">
+          <div class="notebook-settings-grid">
+            <div class="settings-card">
+              <div class="settings-title">
+                <h3>Điều khiển sổ tay</h3>
+                <span id="nbCountHint" class="hint">0 trang</span>
+              </div>
+              <div class="notebook-actions-grid">
+                <button id="nbNewPageBtn" class="btn btn-primary" type="button">+ Trang mới</button>
+                <button id="nbFromChatBtn" class="btn btn-secondary" type="button">Tạo từ chat</button>
+                <button id="nbSaveBtn" class="btn btn-primary" type="button">Lưu trang</button>
+                <button id="nbDeleteBtn" class="btn btn-danger" type="button">Xóa trang</button>
+                <button id="nbQuickAIBtn" class="btn btn-secondary" type="button" style="grid-column:1/-1">Ghi nhanh từ AI</button>
+              </div>
+            </div>
+
+            <div class="settings-card">
+              <div class="settings-title">
+                <h3>Gợi ý</h3>
+                <span class="hint">Nhanh gọn</span>
+              </div>
+              <div class="settings-tip">
+                Bấm “+ Trang mới” để viết từ đầu, “Tạo từ chat” để lấy nội dung theo cuộc trò chuyện hiện tại, hoặc “Ghi nhanh từ AI” để chép đoạn AI vừa trả lời vào trang đang mở.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="notebook-layout">
+          <aside class="settings-card notebook-tools">
+            <div class="settings-title">
+              <h3>Danh sách trang</h3>
+              <span class="hint">Bấm để chuyển trang</span>
+            </div>
+
+            <div id="nbPageList" class="page-list"></div>
+
+          </aside>
+
+          <section class="settings-card nb-editor">
+            <div class="settings-title">
+              <h3>Chỉnh sửa trang</h3>
+              <span id="nbMetaHint" class="hint">Chưa chọn trang</span>
+            </div>
+
+            <div class="field">
+              <label>Tiêu đề trang</label>
+              <input id="nbTitleInput" type="text" placeholder="Ví dụ: Tóm tắt cuộc trò chuyện" />
+            </div>
+
+            <div class="field" style="flex:1;min-height:0;display:flex;flex-direction:column">
+              <label>Nội dung trang</label>
+              <textarea id="nbContentInput" placeholder="Viết ghi chú dài ở đây..."></textarea>
+            </div>
+
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-row">
+          <div class="avatar" id="brandAvatar">
+            <img id="brandAvatarImg" alt="avatar" />
+            <span id="brandAvatarText">AI</span>
+          </div>
+          <div class="brand">
+            <h1 id="brandTitle">AI</h1>
+            <div class="sub" id="brandSub">AI thuần · Multi chat</div>
+          </div>
+        </div>
+        <button id="newChatBtn" class="new-chat-btn" type="button">+ Chat mới</button>
+      </div>
+
+      <div class="chat-list" id="chatList" aria-label="Danh sách chat"></div>
+
+      <div class="sidebar-foot">
+        Mỗi chat và sổ tay lưu riêng trong máy này.<br/>
+        Xóa từng chat bằng nút thùng rác.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Mở menu">☰</button>
+          <div class="chat-head">
+            <h2 id="activeChatTitle">Chat</h2>
+            <div id="activeChatSub" class="tiny">Sẵn sàng</div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <a id="translatePageBtn" class="link-btn" href="./Translate.html" target="_self" rel="noopener">🔗 Dịch thuật</a>
+          <button id="notebookBtn" class="settings-toggle-btn" type="button">📝 Sổ tay</button>
+          <button id="settingsBtn" class="settings-toggle-btn" type="button">⚙ Cài đặt</button>
+          <div class="pill" id="dailyInfo">Lượt hôm nay: 0/50</div>
+          <button id="deleteChatBtn" class="danger-btn" type="button">Xóa chat này</button>
+        </div>
+      </div>
+
+      <div id="messagesWrap" class="messages-wrap">
+        <div id="messages" class="messages" aria-live="polite"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="composer-wrap">
+    <div class="composer" role="region" aria-label="Thanh nhập">
+      <div class="input-box">
+        <div class="row-input">
+          <div class="input-wrap">
+            <input id="textInput" type="text" placeholder="Gõ tin nhắn... (Enter gửi)" autocomplete="off" />
+          </div>
+          <button id="sendBtn" class="send-btn" type="button">Gửi</button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">
+          <div class="small compact">
+            Web thực hiện bởi Shirogane Ken sử dụng công nghệ API của Groq và Google App Script do chính tôi code nhằm hỗ trợ dịch
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="main.js"></script>
+
+</body>
+</html>

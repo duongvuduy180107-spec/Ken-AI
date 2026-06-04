@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Translate — AI Multi Chat</title>
+  <style>
+    :root{
+      --bg1:#03101a;
+      --bg2:#071020;
+      --panel:rgba(11,18,32,.92);
+      --line:rgba(255,255,255,.08);
+      --text:#e6eef8;
+      --muted:#9aa6b6;
+      --accent:#7dd3fc;
+      --danger:#fb7185;
+      --shadow:0 10px 40px rgba(2,6,23,.6);
+      --radius:18px;
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow:hidden;
+    }
+
+    button,select,input,textarea{font:inherit}
+    a{color:inherit;text-decoration:none}
+
+    .app{
+      height:100vh;
+      display:flex;
+      min-width:0;
+    }
+
+    .main{
+      flex:1;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:rgba(6,10,16,.40);
+      backdrop-filter:blur(10px);
+      z-index:10;
+    }
+
+    .topbar-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .brand-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .avatar{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,#7dd3fc 0%,#c084fc 100%);
+      color:#06111b;
+      font-weight:900;
+      font-size:14px;
+      box-shadow:0 10px 24px rgba(125,211,252,.25);
+      flex:0 0 auto;
+      overflow:hidden;
+    }
+
+    .avatar span{
+      display:grid;
+      place-items:center;
+      width:100%;
+      height:100%;
+    }
+
+    .page-head{
+      min-width:0;
+    }
+    .page-head h1{
+      margin:0;
+      font-size:18px;
+      line-height:1.1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .page-head .sub{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:9px 12px;
+      cursor:pointer;
+      font-weight:700;
+      white-space:nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .btn:hover{transform:translateY(-1px)}
+
+    .btn-primary{
+      background:linear-gradient(135deg, rgba(125,211,252,.22), rgba(192,132,252,.22));
+      color:#eefbff;
+      border:1px solid rgba(125,211,252,.20);
+    }
+    .btn-primary:hover{
+      border-color:rgba(125,211,252,.45);
+      background:linear-gradient(135deg, rgba(125,211,252,.30), rgba(192,132,252,.26));
+    }
+
+    .btn-ghost{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .btn-danger{
+      background:var(--danger);
+      color:#25060d;
+      border:1px solid rgba(251,113,133,.20);
+    }
+
+    .content{
+      flex:1;
+      overflow:auto;
+      padding:18px;
+    }
+
+    .wrap{
+      max-width:920px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .panel{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+
+    .panel-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .panel-title h2,
+    .panel-title h3{
+      margin:0;
+      font-size:14px;
+      color:#dbeafe;
+    }
+    .panel-title span{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-top:10px;
+    }
+    .field:first-child{margin-top:0}
+
+    .field label{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .field input,
+    .field textarea,
+    .field select{
+      width:100%;
+      border:none;
+      outline:none;
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .field textarea{
+      resize:none;
+      min-height:180px;
+      line-height:1.55;
+    }
+
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
+    }
+
+    .pill{
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      color:#d7e4f1;
+      font-size:13px;
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .result-box{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .result-item{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .result-item .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .result-item .text{
+      white-space:pre-wrap;
+      word-break:break-word;
+      line-height:1.55;
+      font-size:15px;
+    }
+
+    .result-item .text.muted{color:var(--muted)}
+
+    .icon-btn{
+      border:none;
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:10px;
+      padding:7px 9px;
+      cursor:pointer;
+      font-size:12px;
+    }
+
+    .drawer{
+      position:fixed;
+      top:0;
+      right:0;
+      bottom:0;
+      width:min(92vw,360px);
+      background:rgba(4,10,18,.95);
+      border-left:1px solid var(--line);
+      box-shadow:var(--shadow);
+      transform:translateX(105%);
+      transition:transform .2s ease;
+      z-index:40;
+      display:flex;
+      flex-direction:column;
+      padding:14px;
+      gap:12px;
+      backdrop-filter:blur(12px);
+    }
+
+    .drawer.open{transform:translateX(0)}
+
+    .drawer-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .drawer-head h3{
+      margin:0;
+      font-size:14px;
+      color:#dbeafe;
+    }
+    .drawer-head span{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .drawer-scroll{
+      overflow:auto;
+      padding-right:2px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .switch-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .switch-row input{
+      transform:scale(1.08);
+    }
+
+    .note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .toast{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      background:rgba(0,0,0,.72);
+      padding:10px 14px;
+      border-radius:8px;
+      color:#e6eef8;
+      z-index:60;
+      max-width:min(92vw,360px);
+      display:none;
+    }
+
+    .typing{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    .typing span{
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:#cfeefc;
+      opacity:.3;
+      animation:blink 1s infinite;
+      display:inline-block;
+    }
+    .typing span:nth-child(2){animation-delay:.15s}
+    .typing span:nth-child(3){animation-delay:.3s}
+
+    @keyframes blink{
+      0%{opacity:.2;transform:translateY(0)}
+      50%{opacity:1;transform:translateY(-4px)}
+      100%{opacity:.2;transform:translateY(0)}
+    }
+
+    @media(max-width:720px){
+      .topbar{padding:14px 12px}
+      .content{padding:12px}
+      .btn{padding:8px 11px}
+      .field textarea{min-height:170px}
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <div class="app">
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="brand-row">
+            <div class="avatar"><span>AI</span></div>
+            <div class="page-head">
+              <h1>Translate</h1>
+              <div class="sub">Khớp giao diện Multi Chat</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <a class="btn btn-ghost" href="./index.html">← Về chat</a>
+          <button id="swapBtn" class="btn btn-ghost" type="button">⇄ Đổi chiều</button>
+          <button id="settingsBtn" class="btn btn-ghost" type="button">⚙ Cài đặt</button>
+          <button id="translateBtnTop" class="btn btn-primary" type="button">✨ Dịch ngay</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="wrap">
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Văn bản đầu vào</h2>
+              <span id="sourceHint">Tự nhận diện ngôn ngữ</span>
+            </div>
+
+            <div class="field">
+              <label>Ngôn ngữ nguồn</label>
+              <select id="sourceLang">
+                <option value="auto">Tự động</option>
+                <option value="ja">Tiếng Nhật</option>
+                <option value="vi">Tiếng Việt</option>
+                <option value="en">Tiếng Anh</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Ngôn ngữ đích</label>
+              <select id="targetLang">
+                <option value="vi">Tiếng Việt</option>
+                <option value="ja">Tiếng Nhật</option>
+                <option value="en">Tiếng Anh</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Nội dung</label>
+              <textarea id="inputText" placeholder="Dán hoặc nhập văn bản ở đây..."></textarea>
+            </div>
+
+            <div class="row">
+              <span class="pill" id="charCount">0 ký tự</span>
+              <span class="pill" id="statusText">Sẵn sàng</span>
+              <button id="clearBtn" class="btn btn-ghost" type="button">Xoá nội dung</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h2>Kết quả</h2>
+              <span>Romanji nếu có</span>
+            </div>
+
+            <div class="result-box">
+              <div class="result-item">
+                <div class="label">
+                  <span>Bản dịch</span>
+                  <button id="copyTranslatedBtn" class="icon-btn" type="button">Sao chép</button>
+                </div>
+                <div class="text" id="translatedText">Chưa có kết quả</div>
+              </div>
+
+              <div class="result-item">
+                <div class="label">
+                  <span>Romanji / phiên âm</span>
+                  <button id="copyRomanjiBtn" class="icon-btn" type="button">Sao chép</button>
+                </div>
+                <div class="text muted" id="romanjiText">Chưa có</div>
+              </div>
+
+              <div class="result-item">
+                <div class="label">Ghi chú</div>
+                <div class="text muted" id="noteText">Dùng nút Dịch ngay hoặc bật tự dịch trong cài đặt.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <aside id="settingsDrawer" class="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <h3>Cài đặt</h3>
+        <span>Ẩn bớt cho gọn</span>
+      </div>
+      <button id="closeSettingsBtn" class="btn btn-ghost" type="button">Đóng</button>
+    </div>
+
+    <div class="drawer-scroll">
+      <div class="panel" style="box-shadow:none">
+        <div class="panel-title">
+          <h2>Tùy chọn dịch</h2>
+          <span>Ít dùng</span>
+        </div>
+
+        <div class="switch-row">
+          <span>Tự động dịch khi mở từ app</span>
+          <input id="autoMode" type="checkbox" />
+        </div>
+
+        <div class="switch-row">
+          <span>Tự lưu nội dung</span>
+          <input id="saveText" type="checkbox" checked />
+        </div>
+
+        <div class="switch-row">
+          <span>Ghi nhớ ngôn ngữ</span>
+          <input id="rememberLang" type="checkbox" checked />
+        </div>
+
+        <div class="note">
+          Phần URL Google Apps Script đã được giữ trong code, không hiển thị ở giao diện nữa.
+        </div>
+      </div>
+
+      <div class="panel" style="box-shadow:none">
+        <div class="panel-title">
+          <h2>Điều hướng</h2>
+          <span>Nhanh gọn</span>
+        </div>
+
+        <div class="row">
+          <button id="swapBtn2" class="btn btn-ghost" type="button">⇄ Đổi chiều</button>
+          <button id="translateBtnSide" class="btn btn-primary" type="button">✨ Dịch ngay</button>
+        </div>
+
+        <div class="note">
+          Ctrl + Enter để dịch nhanh.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      'use strict';
+
+      const CONFIG = {
+        translateScriptUrl: 'https://script.google.com/macros/s/AKfycbzAICigheXKYUsTbz40wBvBZoO7e1QwpnshdmXNKssfruroT7ATW6-kKr3fL-cDH7GG/exec',
+        dailyLimit: 9999
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      const settingsDrawer = $('settingsDrawer');
+      const settingsBtn = $('settingsBtn');
+      const closeSettingsBtn = $('closeSettingsBtn');
+
+      const sourceLangEl = $('sourceLang');
+      const targetLangEl = $('targetLang');
+      const inputTextEl = $('inputText');
+
+      const translatedTextEl = $('translatedText');
+      const romanjiTextEl = $('romanjiText');
+      const noteTextEl = $('noteText');
+      const statusTextEl = $('statusText');
+      const charCountEl = $('charCount');
+      const sourceHintEl = $('sourceHint');
+
+      const autoModeEl = $('autoMode');
+      const saveTextEl = $('saveText');
+      const rememberLangEl = $('rememberLang');
+
+      const swapBtn = $('swapBtn');
+      const swapBtn2 = $('swapBtn2');
+      const translateBtnTop = $('translateBtnTop');
+      const translateBtnSide = $('translateBtnSide');
+      const clearBtn = $('clearBtn');
+
+      const copyTranslatedBtn = $('copyTranslatedBtn');
+      const copyRomanjiBtn = $('copyRomanjiBtn');
+      const toastEl = $('toast');
+
+      const STORAGE_PREFIX = 'translate_page_v2_';
+      const STORAGE_SOURCE = STORAGE_PREFIX + 'source';
+      const STORAGE_TARGET = STORAGE_PREFIX + 'target';
+      const STORAGE_TEXT = STORAGE_PREFIX + 'text';
+      const STORAGE_AUTO = STORAGE_PREFIX + 'auto';
+      const STORAGE_SAVE = STORAGE_PREFIX + 'save';
+      const STORAGE_REMEMBER = STORAGE_PREFIX + 'remember';
+      const STORAGE_DRAWER = STORAGE_PREFIX + 'drawer';
+
+      const params = new URLSearchParams(location.search);
+      const presetText = params.get('text') || '';
+      const presetSource = params.get('source') || '';
+      const presetTarget = params.get('target') || '';
+      const presetAuto = params.get('auto') || '';
+
+      sourceLangEl.value = localStorage.getItem(STORAGE_SOURCE) || 'auto';
+      targetLangEl.value = localStorage.getItem(STORAGE_TARGET) || 'vi';
+      inputTextEl.value = localStorage.getItem(STORAGE_TEXT) || presetText;
+
+      autoModeEl.checked = readBool(STORAGE_AUTO, presetAuto === 'on');
+      saveTextEl.checked = readBool(STORAGE_SAVE, true);
+      rememberLangEl.checked = readBool(STORAGE_REMEMBER, true);
+
+      if (presetSource) sourceLangEl.value = presetSource;
+      if (presetTarget) targetLangEl.value = presetTarget;
+
+      setDrawerOpen(localStorage.getItem(STORAGE_DRAWER) === 'on' ? true : false, false);
+      updateUI();
+
+      if (autoModeEl.checked && inputTextEl.value.trim()) {
+        setTimeout(() => translate(true), 180);
+      }
+
+      settingsBtn.addEventListener('click', () => setDrawerOpen(!settingsDrawer.classList.contains('open')));
+      closeSettingsBtn.addEventListener('click', () => setDrawerOpen(false));
+
+      sourceLangEl.addEventListener('change', () => {
+        if (rememberLangEl.checked) localStorage.setItem(STORAGE_SOURCE, sourceLangEl.value);
+        updateUI();
+        maybeAutoTranslate();
+      });
+
+      targetLangEl.addEventListener('change', () => {
+        if (rememberLangEl.checked) localStorage.setItem(STORAGE_TARGET, targetLangEl.value);
+        updateUI();
+        maybeAutoTranslate();
+      });
+
+      inputTextEl.addEventListener('input', () => {
+        if (saveTextEl.checked) localStorage.setItem(STORAGE_TEXT, inputTextEl.value);
+        updateUI();
+        maybeAutoTranslate();
+      });
+
+      autoModeEl.addEventListener('change', () => {
+        localStorage.setItem(STORAGE_AUTO, autoModeEl.checked ? 'on' : 'off');
+      });
+
+      saveTextEl.addEventListener('change', () => {
+        localStorage.setItem(STORAGE_SAVE, saveTextEl.checked ? 'on' : 'off');
+      });
+
+      rememberLangEl.addEventListener('change', () => {
+        localStorage.setItem(STORAGE_REMEMBER, rememberLangEl.checked ? 'on' : 'off');
+      });
+
+      clearBtn.addEventListener('click', () => {
+        inputTextEl.value = '';
+        if (saveTextEl.checked) localStorage.removeItem(STORAGE_TEXT);
+        translatedTextEl.textContent = 'Chưa có kết quả';
+        romanjiTextEl.textContent = 'Chưa có';
+        noteTextEl.textContent = 'Dùng nút Dịch ngay hoặc bật tự dịch trong cài đặt.';
+        statusTextEl.textContent = 'Đã xoá';
+        updateUI();
+      });
+
+      swapBtn.addEventListener('click', swapLanguages);
+      swapBtn2.addEventListener('click', swapLanguages);
+
+      translateBtnTop.addEventListener('click', () => translate(false));
+      translateBtnSide.addEventListener('click', () => translate(false));
+
+      copyTranslatedBtn.addEventListener('click', () => copyText(translatedTextEl.textContent));
+      copyRomanjiBtn.addEventListener('click', () => copyText(romanjiTextEl.textContent));
+
+      inputTextEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          translate(false);
+        }
+      });
+
+      function readBool(key, fallback) {
+        const v = localStorage.getItem(key);
+        if (v === null) return fallback;
+        return v === 'on';
+      }
+
+      function setDrawerOpen(open, persist = true) {
+        settingsDrawer.classList.toggle('open', open);
+        settingsDrawer.setAttribute('aria-hidden', String(!open));
+        if (persist) localStorage.setItem(STORAGE_DRAWER, open ? 'on' : 'off');
+      }
+
+      function updateUI() {
+        charCountEl.textContent = `${inputTextEl.value.length} ký tự`;
+        sourceHintEl.textContent = sourceLangEl.value === 'auto'
+          ? 'Tự nhận diện ngôn ngữ'
+          : `Nguồn: ${labelLang(sourceLangEl.value)}`;
+      }
+
+      function labelLang(code) {
+        return ({
+          ja: 'Tiếng Nhật',
+          vi: 'Tiếng Việt',
+          en: 'Tiếng Anh',
+          auto: 'Tự động'
+        }[code] || code);
+      }
+
+      function showToast(msg, ms = 1800) {
+        toastEl.textContent = msg;
+        toastEl.style.display = 'block';
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => {
+          toastEl.style.display = 'none';
+        }, ms);
+      }
+
+      function setStatus(text) {
+        statusTextEl.textContent = text;
+      }
+
+      function maybeAutoTranslate() {
+        if (!autoModeEl.checked) return;
+        clearTimeout(maybeAutoTranslate._t);
+        maybeAutoTranslate._t = setTimeout(() => translate(true), 650);
+      }
+
+      function swapLanguages() {
+        const source = sourceLangEl.value;
+        const target = targetLangEl.value;
+
+        if (source === 'auto') {
+          sourceLangEl.value = target;
+          targetLangEl.value = 'vi';
+        } else {
+          sourceLangEl.value = target;
+          targetLangEl.value = source;
+        }
+
+        if (rememberLangEl.checked) {
+          localStorage.setItem(STORAGE_SOURCE, sourceLangEl.value);
+          localStorage.setItem(STORAGE_TARGET, targetLangEl.value);
+        }
+
+        updateUI();
+        maybeAutoTranslate();
+        showToast('Đã đổi chiều dịch');
+      }
+
+      function getScriptUrl() {
+        return CONFIG.translateScriptUrl;
+      }
+
+      async function copyText(text) {
+        const raw = String(text || '').trim();
+        if (!raw || raw === 'Chưa có kết quả' || raw === 'Chưa có') {
+          showToast('Chưa có gì để sao chép');
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(raw);
+          showToast('Đã sao chép');
+        } catch {
+          showToast('Không sao chép được');
+        }
+      }
+
+      async function translate(isAuto = false) {
+        const text = inputTextEl.value.trim();
+        if (!text) {
+          if (!isAuto) showToast('Nhập nội dung trước đã');
+          return;
+        }
+
+        const url = getScriptUrl();
+        if (!url) {
+          if (!isAuto) showToast('Thiếu URL script trong code');
+          return;
+        }
+
+        setStatus(isAuto ? 'Đang tự dịch...' : 'Đang dịch...');
+        translateBtnTop.disabled = true;
+        translateBtnSide.disabled = true;
+        translateBtnTop.textContent = '⏳ Đang dịch...';
+        translateBtnSide.textContent = '⏳ Đang dịch...';
+
+        try {
+          const finalUrl =
+            url +
+            '?text=' + encodeURIComponent(text) +
+            '&source=' + encodeURIComponent(sourceLangEl.value) +
+            '&target=' + encodeURIComponent(targetLangEl.value);
+
+          const res = await fetch(finalUrl, { method: 'GET' });
+          if (!res.ok) throw new Error('Translate script returned ' + res.status);
+
+          const data = await res.json();
+
+          translatedTextEl.textContent =
+            data.translated || data.result || data.text || '(Không có bản dịch)';
+
+          romanjiTextEl.textContent =
+            data.romanji || data.romaji || data.pronunciation || 'Không có romanji';
+
+          noteTextEl.textContent = data.note || 'Dịch hoàn tất.';
+          setStatus('Hoàn thành');
+          if (!isAuto) showToast('Đã dịch xong');
+        } catch (err) {
+          translatedTextEl.textContent = 'Lỗi: ' + (err?.message || String(err));
+          romanjiTextEl.textContent = 'Không có';
+          noteTextEl.textContent = 'Kiểm tra lại endpoint Apps Script hoặc phản hồi JSON.';
+          setStatus('Lỗi');
+          if (!isAuto) showToast('Dịch thất bại');
+        } finally {
+          translateBtnTop.disabled = false;
+          translateBtnSide.disabled = false;
+          translateBtnTop.textContent = '✨ Dịch ngay';
+          translateBtnSide.textContent = '✨ Dịch ngay';
+          updateUI();
+
+          if (saveTextEl.checked) {
+            localStorage.setItem(STORAGE_TEXT, inputTextEl.value);
+          }
+          if (rememberLangEl.checked) {
+            localStorage.setItem(STORAGE_SOURCE, sourceLangEl.value);
+            localStorage.setItem(STORAGE_TARGET, targetLangEl.value);
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
